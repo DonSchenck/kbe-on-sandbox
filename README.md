@@ -1,4 +1,4 @@
-# kbe-on-sandbox
+
 
 ## Exploring Kubernetes By Example, using Red Hat Developer Sandbox for OpenShift
 
@@ -36,19 +36,67 @@ The Kubernetes features used, as described at kubernetesbyexample.com, will be:
 * logging
 
 ## Preparation
+You will need to download or clone the following three repositories (repos) from Github.com:
+
 `git clone https://github.com/donschenck/quotesweb`  
 `git clone https://github.com/donschenck/quotemysql`  
 `git clone https://github.com/donschenck/qotd-python`
 
 
 ## The Tutorial
+### What we're creating
+This tutorial will guide you through using Kubernetes to create three components.  
+
+First, a backend application, written in Python 3.8, that supplies "Quote Of The Day"-type data via a RESTful API. The endpoints are as follows:  
+
+/  
+Returns the string "qotd" to simply identify the service.
+
+/version  
+Returns a string denoting the version id of the service.  
+
+/writtenin  
+Returns the programming language in which the service is written. In this case it is "Python", but there this same service is available in several different programming languages.  
+
+/quotes  
+Returns a JSON array of all of the quotes.  
+
+/quotes/random  
+Returns a JSON object of one random quote from among the set of available quotes.  
+
+/quotes/{id}  
+Returns a JSON object of one specific quote within the set of available quotes.  
+
+
 ### Logging into the sandbox
 **TODO** Copy the login command from your sandbox and use that.
+
 ### Creating a backend program called "quotes", including setting environment variables to be used by the code.
+
+In this step we will create three Kubernetes objects: a Deployment, a Service, and a Route (which is similar to the Ingress and Ingress Controller objects).
+
+<hr>  
+
+### About Route, Ingress, and Ingress Controller  
+Because Red Hat Developer Sandbox for OpenShift is administered by Red Hat, you do not have administrator access to the Kubernetes cluster. One of the limitations of this is that you are not granted rights to create Ingress and Ingress Controller objects.
+
+OpenShift has its own built-in Ingress-like object, the Route. For this tutorial, we're going to "cheat" and use the Route object. Be aware that we are using this workaround; in your own Kubernetes cluster you'll want to create the Ingress and Ingress Controller objects.
+<hr>
+
 In your qotd-python/k8s directory:  
 `kubectl apply -f quotes-deployment.yaml`  
 `kubectl apply -f service.yaml`  
 `kubectl apply -f route.yaml`  
+
+#### pods and labels
+When you create the deployment, Kubernetes will pull the image from the image registry named in the yaml file and will create a pod. It will also assign the labels which you specified in the deployment.
+
+The pod name is automatically generated from the deployment name, with random characters appended to it.
+
+Viewing the contents of the file quotes-deployment.yaml, we can see that the pods will be named "quotesweb" (plus the random characters, e.g. "quotesweb-5468c95fc6-5sp9j"), while the label will be "app=quotesweb".
+
+Note that the pod name and app name *do not* need to be the same.
+
 Note that the deployment (quotes-deployment.yaml) will use the following image:
 quay.io/donschenck/quotes:v1
 
@@ -76,11 +124,10 @@ In your quotesmysql directory:
 **TODO**
 ### Creating a MariaDB database, "quotesdb", running in Kubernetes
 In your quotesmysql directory:  
-o create the mariadb database:
 
-`kubectl apply -f mysql-secret.yaml`
-`kubectl apply -f mysqlvolume.yaml`
-`kubectl apply -f mysql-deployment.yaml`
+`kubectl apply -f mysql-secret.yaml`  
+`kubectl apply -f mysqlvolume.yaml`  
+`kubectl apply -f mysql-deployment.yaml`  
 
 
 ### Creating and populating the table "quotes" in the "quotesdb" database.
